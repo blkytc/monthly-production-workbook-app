@@ -3,7 +3,7 @@
 import sys
 
 
-app_name = "月度生产表生成器"
+app_name = "月度生产表生成器" if sys.platform == "darwin" else "MonthlyWorkbookGenerator"
 a = Analysis(
     ["launcher.py"],
     pathex=["src"],

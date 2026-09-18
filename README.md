@@ -36,6 +36,6 @@ py -m pip install -r requirements-build.txt
 scripts\build_windows.bat
 ```
 
-产物位于 `dist\月度生产表生成器.exe`。PyInstaller 不支持从 macOS 交叉生成 Windows 可执行文件，但项目的 GitHub Actions 会自动在 Windows 云端构建，并生成 `月度生产表生成器-Windows.zip`。将代码推送并创建 `v*` 标签后，Windows ZIP 会自动添加到 GitHub Release，用户解压后直接双击 `.exe`。
+产物位于 `dist\MonthlyWorkbookGenerator.exe`。PyInstaller 不支持从 macOS 交叉生成 Windows 可执行文件，但项目的 GitHub Actions 会自动在 Windows 云端构建，并生成 `MonthlyWorkbookGenerator-Windows.zip`。将代码推送并创建 `v*` 标签后，Windows ZIP 会自动添加到 GitHub Release，用户解压后直接双击 `.exe`。
 
 应用中的“帮助”按钮会打开随程序打包的离线电子帮助文档。
