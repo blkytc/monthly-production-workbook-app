@@ -5,6 +5,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import Mock, patch
 from xml.etree import ElementTree as ET
 
 from openpyxl import load_workbook
@@ -24,6 +25,49 @@ SOURCES = {
     ReportKind.INVENTORY_PLAN: DESKTOP / "大水矿石产消存计划一览表（9月）.xls",
     ReportKind.DISPATCH_INFO: DESKTOP / "开阳大水工业园区调度生产信息（9月）.xls",
 }
+
+
+class WindowsConversionTests(unittest.TestCase):
+    def test_convert_xls_uses_installed_windows_office_when_libreoffice_is_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "旧报表.xls"
+            source.write_bytes(b"xls")
+            destination = Path(directory) / "converted"
+
+            def create_output(command, **_kwargs):
+                destination.mkdir(parents=True, exist_ok=True)
+                (destination / "旧报表.xlsx").write_bytes(b"xlsx")
+                return Mock(returncode=0, stdout="", stderr="")
+
+            with (
+                patch("monthly_workbook.legacy_reports._libreoffice_path", return_value=None),
+                patch("monthly_workbook.legacy_reports._windows_conversion_script", return_value=Path("convert_xls_windows.ps1")),
+                patch("monthly_workbook.legacy_reports.sys.platform", "win32"),
+                patch("monthly_workbook.legacy_reports.subprocess.run", side_effect=create_output) as run,
+            ):
+                result = convert_xls(source, destination)
+
+            self.assertEqual(result, destination.resolve() / "旧报表.xlsx")
+            command = run.call_args.args[0]
+            self.assertEqual(command[0], "powershell.exe")
+            self.assertIn("convert_xls_windows.ps1", command)
+            self.assertIn(str(source.resolve()), command)
+
+    def test_convert_xls_explains_requirements_when_windows_office_conversion_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "旧报表.xls"
+            source.write_bytes(b"xls")
+            with (
+                patch("monthly_workbook.legacy_reports._libreoffice_path", return_value=None),
+                patch("monthly_workbook.legacy_reports._windows_conversion_script", return_value=Path("convert_xls_windows.ps1")),
+                patch("monthly_workbook.legacy_reports.sys.platform", "win32"),
+                patch(
+                    "monthly_workbook.legacy_reports.subprocess.run",
+                    return_value=Mock(returncode=1, stdout="", stderr="未找到可用的表格程序"),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Excel、WPS 或 LibreOffice"):
+                    convert_xls(source, Path(directory) / "converted")
 
 
 class LegacyReportTests(unittest.TestCase):

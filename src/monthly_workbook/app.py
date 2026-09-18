@@ -27,6 +27,54 @@ UNITS = ("字符", "磅", "厘米", "毫米", "英寸")
 FILENAME_DATE_RANGE = re.compile(
     r"-?\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}$"
 )
+THEME = {
+    "background": "#17191c",
+    "panel": "#202327",
+    "field": "#2b2f34",
+    "text": "#f2f3f5",
+    "muted": "#a7adb5",
+    "border": "#3a3f46",
+    "accent": "#2f80ed",
+    "selected": "#245fba",
+}
+
+
+def apply_app_theme(style: ttk.Style, root: tk.Tk) -> None:
+    if "clam" in style.theme_names():
+        style.theme_use("clam")
+    root.configure(background=THEME["background"])
+    style.configure(".", background=THEME["background"], foreground=THEME["text"])
+    style.configure("TFrame", background=THEME["background"])
+    style.configure("TLabel", background=THEME["background"], foreground=THEME["text"])
+    style.configure("TLabelframe", background=THEME["background"], foreground=THEME["text"])
+    style.configure("TLabelframe.Label", background=THEME["background"], foreground=THEME["text"])
+    style.configure(
+        "TEntry", fieldbackground=THEME["field"], foreground=THEME["text"],
+        insertcolor=THEME["text"], bordercolor=THEME["border"], padding=5,
+    )
+    style.configure(
+        "TCombobox", fieldbackground=THEME["field"], foreground=THEME["text"],
+        background=THEME["field"], arrowcolor=THEME["text"], padding=4,
+    )
+    style.configure(
+        "TButton", background=THEME["field"], foreground=THEME["text"],
+        bordercolor=THEME["border"], padding=(10, 6),
+    )
+    style.map(
+        "TButton",
+        background=[("pressed", THEME["selected"]), ("active", THEME["accent"])],
+        foreground=[("disabled", THEME["muted"]), ("!disabled", THEME["text"])],
+    )
+    style.configure(
+        "Treeview", background=THEME["panel"], fieldbackground=THEME["panel"],
+        foreground=THEME["text"], bordercolor=THEME["border"], rowheight=26,
+    )
+    style.configure(
+        "Treeview.Heading", background=THEME["field"], foreground=THEME["text"],
+        relief="flat", padding=(6, 5),
+    )
+    style.map("Treeview", background=[("selected", THEME["selected"])], foreground=[("selected", "#ffffff")])
+    style.map("TCombobox", fieldbackground=[("readonly", THEME["field"])], foreground=[("readonly", THEME["text"])])
 
 
 def parse_user_date(text: str) -> dt.date:
@@ -85,7 +133,7 @@ class RuleDialog(tk.Toplevel):
         ttk.Label(self, text=prompt).grid(row=0, column=0, padx=12, pady=(14, 5), sticky="w")
         self.selection = ttk.Entry(self, width=28)
         self.selection.grid(row=1, column=0, columnspan=2, padx=12, sticky="ew")
-        ttk.Label(self, text=example, foreground="#666666").grid(row=2, column=0, columnspan=2, padx=12, pady=(3, 10), sticky="w")
+        ttk.Label(self, text=example, foreground=THEME["muted"]).grid(row=2, column=0, columnspan=2, padx=12, pady=(3, 10), sticky="w")
 
         ttk.Label(self, text="尺寸").grid(row=3, column=0, padx=12, sticky="w")
         ttk.Label(self, text="单位").grid(row=3, column=1, padx=12, sticky="w")
@@ -199,7 +247,7 @@ class WorkbookApp(ttk.Frame):
         ttk.Entry(date_frame, textvariable=self.start, width=18).pack(side="left")
         ttk.Label(date_frame, text="结束日期", padding=(18, 0, 8, 0)).pack(side="left")
         ttk.Entry(date_frame, textvariable=self.end, width=18).pack(side="left")
-        ttk.Label(date_frame, text="年/月/日", foreground="#666666", padding=(8, 0)).pack(side="left")
+        ttk.Label(date_frame, text="年/月/日", foreground=THEME["muted"], padding=(8, 0)).pack(side="left")
 
         rules = ttk.Frame(self)
         rules.grid(row=4, column=0, columnspan=3, sticky="nsew", pady=(12, 8))
@@ -388,8 +436,7 @@ class WorkbookApp(ttk.Frame):
 def main() -> None:
     root = tk.Tk()
     style = ttk.Style(root)
-    if "aqua" in style.theme_names():
-        style.theme_use("aqua")
+    apply_app_theme(style, root)
     WorkbookApp(root)
     root.mainloop()
 

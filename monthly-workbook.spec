@@ -8,7 +8,10 @@ a = Analysis(
     ["launcher.py"],
     pathex=["src"],
     binaries=[],
-    datas=[("src/monthly_workbook/help.html", "monthly_workbook")],
+    datas=[
+        ("src/monthly_workbook/help.html", "monthly_workbook"),
+        ("src/monthly_workbook/convert_xls_windows.ps1", "monthly_workbook"),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -7,6 +7,7 @@ import datetime as dt
 import re
 import shutil
 import subprocess
+import sys
 import zipfile
 from dataclasses import dataclass
 from enum import Enum
@@ -35,34 +36,58 @@ class SupplierChange:
     new_name: str
 
 
-def _soffice() -> str:
+def _libreoffice_path() -> str | None:
     candidates = [
         shutil.which("soffice"),
         "/Applications/LibreOffice.app/Contents/MacOS/soffice",
         str(Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice"),
         r"C:\Program Files\LibreOffice\program\soffice.exe",
+        r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
     ]
     for candidate in candidates:
         if candidate and Path(candidate).exists():
             return str(candidate)
-    raise RuntimeError("处理 .xls 需要安装 LibreOffice，或先用 Excel/WPS 另存为 .xlsx")
+    return None
+
+
+def _windows_conversion_script() -> Path:
+    bundle_root = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+    bundled = bundle_root / "monthly_workbook" / "convert_xls_windows.ps1"
+    return bundled if bundled.exists() else Path(__file__).with_name("convert_xls_windows.ps1")
 
 
 def convert_xls(source: str | Path, output_dir: str | Path) -> Path:
     source_path = Path(source).expanduser().resolve()
     output_path = Path(output_dir).expanduser().resolve()
     output_path.mkdir(parents=True, exist_ok=True)
-    profile = output_path / ".libreoffice-profile"
-    command = [
-        _soffice(), f"-env:UserInstallation={profile.as_uri()}", "--headless",
-        "--convert-to", "xlsx", "--outdir", str(output_path), str(source_path),
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, timeout=120)
     converted = output_path / f"{source_path.stem}.xlsx"
-    if result.returncode or not converted.exists():
-        detail = result.stderr.strip() or result.stdout.strip() or "转换失败"
-        raise RuntimeError(f"无法转换旧版 Excel 文件：{detail}")
-    return converted
+    failures = []
+    libreoffice = _libreoffice_path()
+    if libreoffice:
+        profile = output_path / ".libreoffice-profile"
+        command = [
+            libreoffice, f"-env:UserInstallation={profile.as_uri()}", "--headless",
+            "--convert-to", "xlsx", "--outdir", str(output_path), str(source_path),
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+        if result.returncode == 0 and converted.exists():
+            return converted
+        failures.append(result.stderr.strip() or result.stdout.strip() or "LibreOffice 转换失败")
+
+    if sys.platform == "win32":
+        command = [
+            "powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+            "-File", str(_windows_conversion_script()), "-Source", str(source_path),
+            "-Output", str(converted),
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+        if result.returncode == 0 and converted.exists():
+            return converted
+        failures.append(result.stderr.strip() or result.stdout.strip() or "Windows Office 转换失败")
+
+    detail = "；".join(value for value in failures if value)
+    requirement = "请安装 Microsoft Excel、WPS 或 LibreOffice，或先将文件另存为 .xlsx"
+    raise RuntimeError(f"无法转换旧版 Excel 文件：{detail + '。' if detail else ''}{requirement}")
 
 
 def detect_report(path: str | Path) -> ReportKind:

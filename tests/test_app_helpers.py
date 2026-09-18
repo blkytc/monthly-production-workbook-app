@@ -1,13 +1,50 @@
 import datetime as dt
 import unittest
 from pathlib import Path
+from unittest.mock import Mock
 
 from monthly_workbook.app import (
+    apply_app_theme,
     default_output_path,
     normalize_filename,
     parse_user_date,
     update_filename_dates,
 )
+
+
+class RecordingStyle:
+    def __init__(self):
+        self.theme = None
+        self.configured = {}
+        self.mapped = {}
+
+    def theme_names(self):
+        return ("clam", "default")
+
+    def theme_use(self, value):
+        self.theme = value
+
+    def configure(self, name, **values):
+        self.configured[name] = values
+
+    def map(self, name, **values):
+        self.mapped[name] = values
+
+
+class AppThemeTests(unittest.TestCase):
+    def test_dark_theme_configures_portable_controls_and_selection_states(self):
+        style = RecordingStyle()
+        root = Mock()
+
+        apply_app_theme(style, root)
+
+        self.assertEqual(style.theme, "clam")
+        self.assertEqual(root.configure.call_args.kwargs["background"], "#17191c")
+        self.assertEqual(style.configured["TFrame"]["background"], "#17191c")
+        self.assertEqual(style.configured["TEntry"]["fieldbackground"], "#2b2f34")
+        self.assertEqual(style.configured["Treeview"]["background"], "#202327")
+        self.assertIn("background", style.mapped["Treeview"])
+        self.assertIn("background", style.mapped["TButton"])
 
 
 class AppHelperTests(unittest.TestCase):
