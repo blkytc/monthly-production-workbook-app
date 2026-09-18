@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>月度生产表生成器帮助</title>
+  <style>
+    body { max-width: 820px; margin: 36px auto; padding: 0 22px 60px; color: #202124; font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    h1 { font-size: 30px; border-bottom: 1px solid #d8dadd; padding-bottom: 12px; }
+    h2 { margin-top: 30px; font-size: 21px; }
+    code { background: #f1f3f4; padding: 2px 5px; border-radius: 3px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #d8dadd; padding: 8px 10px; text-align: left; }
+    th { background: #f6f7f8; }
+    .note { border-left: 4px solid #2672ec; padding: 8px 14px; background: #f5f8ff; }
+  </style>
+</head>
+<body>
+  <h1>月度生产表生成器帮助</h1>
+  <p>本程序支持四种月度报表，可修改日期、标题、行列尺寸，并按模板规则处理供应商。源文件不会被修改。</p>
+
+  <h2>生成工作表</h2>
+  <ol>
+    <li>点击“浏览”，选择上一期 <code>.xlsx</code> 或受支持的旧版 <code>.xls</code> 模板。</li>
+    <li>检查自动读取的表格标题；需要时直接修改。</li>
+    <li>填写起始日期和结束日期，格式为 <code>年/月/日</code>，例如 <code>2026/10/25</code>。</li>
+    <li>需要调整尺寸时，在“行高设置”或“列宽设置”中点击“添加”。</li>
+    <li>选择保存文件夹，并检查文件名称。修改起始或结束日期时，文件名的日期区间会自动更新，手工修改的名称主体会保留；省略扩展名时程序会自动添加 <code>.xlsx</code>。</li>
+    <li>点击“生成工作表”。</li>
+  </ol>
+  <p class="note">起始和结束日期都会生成工作表。程序按真实公历处理大小月、二月和闰年。</p>
+
+  <h2>支持的报表</h2>
+  <ul>
+    <li>生产、入库、发运表</li>
+    <li>开阳磷矿供贵阳化肥矿石用量</li>
+    <li>大水矿石产消存计划一览表</li>
+    <li>开阳大水工业园区调度生产信息</li>
+  </ul>
+  <p>旧版 <code>.xls</code> 会先转换并保存为 <code>.xlsx</code>。转换需要电脑安装 LibreOffice；也可以先用 Excel 或 WPS 手动另存为 <code>.xlsx</code>。</p>
+
+  <h2>供应商操作</h2>
+  <p>选择后三种报表时，可以添加多条“新增供应商”“修改名称”或“删除供应商”操作。填写后必须点击对话框中的“确定”，并确认主界面的“待执行操作”数量已经增加。修改名称只替换供应商文字。新增或删除供应商会同步调整合并单元格、汇总范围和后续公式。</p>
+  <p>“大水矿石产消存计划一览表”新增供应商时，可以选择“生产日累”或“当日配送量”区域。其他两种报表会自动使用各自的供应商区域。</p>
+  <p>生成新月份时，程序会清空三种报表中的每日手工数据和备注，并保留供应商名称、固定文字及公式。</p>
+
+  <h2>公式规则</h2>
+  <p>第一张工作表使用期初公式，其中 <code>E17</code> 保持空白。填写每日数据后，日累会自动进入月累：第一张月累等于当日日累，后续页面的月累等于当日日累加前一页月累。第一张年累计为当日日累加源表年累基数；生成范围内实际遇到 1 月 1 日时重新累计。</p>
+
+  <h2>行高和列宽</h2>
+  <table>
+    <thead><tr><th>设置</th><th>示例</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>行范围</td><td><code>4-8,12,15-18</code></td><td>第 4 至 8 行、第 12 行、第 15 至 18 行</td></tr>
+      <tr><td>列范围</td><td><code>A:C,F,H:J</code></td><td>A 至 C 列、F 列、H 至 J 列</td></tr>
+    </tbody>
+  </table>
+  <p>单位支持字符、磅、厘米、毫米和英寸。可以添加多条规则；同一行或列重复设置时，最后添加的规则生效。未设置的行列保持模板原尺寸。</p>
+
+  <h2>常见问题</h2>
+  <p><strong>提示模板不匹配：</strong>请选择由原生产表或本程序生成的工作簿，不要删除关键单元格。</p>
+  <p><strong>无法打开 .xls：</strong>安装 LibreOffice，或先在 Excel/WPS 中把文件另存为 .xlsx。</p>
+  <p><strong>公式暂未显示数值：</strong>用 Excel 或 WPS 打开生成文件，程序已设置为打开时自动重新计算。</p>
+  <p><strong>无法覆盖文件：</strong>先关闭 Excel 或 WPS 中已经打开的同名文件，或选择其他保存位置。</p>
+</body>
+</html>
